@@ -1,0 +1,52 @@
+openapi: 3.0.0
+info:
+  title: Ecommerce API
+  version: 1.0.0
+  description: API documentation for the Ecommerce backend
+
+servers:
+  - url: http://localhost:5000/api
+
+tags:
+  - name: Products
+    description: Product list & details
+  - name: Orders
+    description: Order creation & checkout
+  - name: Coupons
+    description: Coupon generation & usage
+  - name: Customers
+    description: Customer login & authentication
+
+paths:
+  /products:
+    get:
+      tags:
+        - Products
+      summary: Get all products
+      responses:
+        200:
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        image_url:
+          type: string
+        available_quantity:
+          type: integer

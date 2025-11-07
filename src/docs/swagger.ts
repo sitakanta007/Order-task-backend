@@ -1,17 +1,18 @@
-import swaggerJsdoc from "swagger-jsdoc";
+import dotenv from 'dotenv';
+dotenv.config();
 
-const options = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "Ecommerce API",
-      version: "1.0.0",
-      description: "Ecommerce backend with customers, products, orders, coupons",
-    }
+import path from 'path';
+import yaml from 'yamljs'; // or 'yaml'
+import fs from 'fs';
+
+const swaggerPath = path.resolve(process.cwd(), 'src/docs/swagger.yaml');
+const file = fs.readFileSync(swaggerPath, 'utf8');
+const swaggerSpecs = yaml.parse(file);
+
+swaggerSpecs.servers = [
+  {
+    url: process.env.APP_BACKEND || 'http://localhost:4000/api',
   },
-  apis: ["./src/routes/*.ts", "./src/controllers/*.ts"]
-};
-
-const swaggerSpecs = swaggerJsdoc(options);
+];
 
 export default swaggerSpecs;
