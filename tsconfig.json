@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "baseUrl": "./src",
+    "paths": {
+      "*": ["*"]
+    },
+    "esModuleInterop": true,
+    "strict": false
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
