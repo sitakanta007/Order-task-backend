@@ -12,6 +12,8 @@ tags:
     description: Product list & details
   - name: Orders
     description: Order creation & checkout
+  - name: Cart
+    description: Add products to Cart
   - name: Coupons
     description: Coupon generation & usage
   - name: Customers
@@ -113,6 +115,84 @@ paths:
                     example: Invalid email or password
         "500":
           description: Internal server error
+  /cart/add:
+    post:
+      tags:
+        - Cart
+      summary: Add product to cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                product_id:
+                  type: string
+                quantity:
+                  type: number
+      responses:
+        "201":
+          description: Product added to cart
+  /cart/{userId}:
+    get:
+      tags:
+        - Cart
+      summary: Get user's cart
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User cart data
+  /cart/update:
+    post:
+      tags:
+        - Cart
+      summary: Update entire cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      product_id:
+                        type: string
+                      quantity:
+                        type: number
+      responses:
+        "200":
+          description: Cart updated
+  /cart/checkout:
+    post:
+      tags:
+        - Cart
+      summary: Checkout current cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+      responses:
+        "200":
+          description: Checkout processed
 components:
   schemas:
     Product:

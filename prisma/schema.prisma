@@ -7,170 +7,108 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model auth_group {
-  id                     Int                      @id @default(autoincrement())
-  name                   String                   @unique(map: "name") @db.VarChar(150)
-  auth_group_permissions auth_group_permissions[]
-  auth_user_groups       auth_user_groups[]
+/* ========= CORE TABLES MANAGED BY DJANGO ========= */
+
+/// Django customers (frontend users you manage via Django Admin; Node validates bcrypt)
+model Customer {
+  id         String   @id @db.Char(32)         // UUID stored as 32-char hex (no dashes)
+  name       String   @db.VarChar(150)
+  email      String   @unique(map: "email") @db.VarChar(254)
+  password   String   @db.VarChar(255)         // bcrypt hash
+  created_at DateTime @db.DateTime(6)
+
+  @@map("customers_customer")
 }
 
-model auth_group_permissions {
-  id              BigInt          @id @default(autoincrement())
-  group_id        Int
-  permission_id   Int
-  auth_permission auth_permission @relation(fields: [permission_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "auth_group_permissio_permission_id_84c5c92e_fk_auth_perm")
-  auth_group      auth_group      @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "auth_group_permissions_group_id_b120cbf9_fk_auth_group_id")
+/// Products created in Django
+model Product {
+  id                 String        @id @db.Char(32)    // UUID hex(32)
+  title              String        @db.VarChar(255)
+  image_url          String?       @db.VarChar(500)
+  description        String?       @db.LongText
+  price              Decimal       @db.Decimal(10, 2)
+  available_quantity Int
+  created_at         DateTime      @db.DateTime(6)
 
-  @@unique([group_id, permission_id], map: "auth_group_permissions_group_id_permission_id_0cd325b0_uniq")
-  @@index([permission_id], map: "auth_group_permissio_permission_id_84c5c92e_fk_auth_perm")
+  cartItems CartItem[]
+
+  @@map("products_product")
 }
 
-model auth_permission {
-  id                         Int                          @id @default(autoincrement())
-  name                       String                       @db.VarChar(255)
-  content_type_id            Int
-  codename                   String                       @db.VarChar(100)
-  auth_group_permissions     auth_group_permissions[]
-  django_content_type        django_content_type          @relation(fields: [content_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "auth_permission_content_type_id_2f476e4b_fk_django_co")
-  auth_user_user_permissions auth_user_user_permissions[]
+/// Orders created at checkout (header)
+model Order {
+  id              String   @id @db.Char(32)            // UUID hex(32)
+  user_id         Int                                     // FK to auth_user (managed by Django); keep scalar
+  subtotal        Decimal  @db.Decimal(10, 2)
+  discount_code   String?  @db.VarChar(50)
+  discount_amount Decimal  @db.Decimal(10, 2)
+  total_amount    Decimal  @db.Decimal(10, 2)
+  created_at      DateTime @db.DateTime(6)
 
-  @@unique([content_type_id, codename], map: "auth_permission_content_type_id_codename_01ab375a_uniq")
+  @@index([user_id], map: "orders_order_user_id_e9b59eb1_fk_auth_user_id")
+  @@map("orders_order")
 }
 
-model auth_user {
-  id                         Int                          @id @default(autoincrement())
-  password                   String                       @db.VarChar(128)
-  last_login                 DateTime?                    @db.DateTime(6)
-  is_superuser               Boolean
-  username                   String                       @unique(map: "username") @db.VarChar(150)
-  first_name                 String                       @db.VarChar(150)
-  last_name                  String                       @db.VarChar(150)
-  email                      String                       @db.VarChar(254)
-  is_staff                   Boolean
-  is_active                  Boolean
-  date_joined                DateTime                     @db.DateTime(6)
-  auth_user_groups           auth_user_groups[]
-  auth_user_user_permissions auth_user_user_permissions[]
-  django_admin_log           django_admin_log[]
-  orders_order               orders_order[]
-}
-
-model auth_user_groups {
-  id         BigInt     @id @default(autoincrement())
-  user_id    Int
-  group_id   Int
-  auth_group auth_group @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "auth_user_groups_group_id_97559544_fk_auth_group_id")
-  auth_user  auth_user  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "auth_user_groups_user_id_6a12ed8b_fk_auth_user_id")
-
-  @@unique([user_id, group_id], map: "auth_user_groups_user_id_group_id_94350c0c_uniq")
-  @@index([group_id], map: "auth_user_groups_group_id_97559544_fk_auth_group_id")
-}
-
-model auth_user_user_permissions {
-  id              BigInt          @id @default(autoincrement())
-  user_id         Int
-  permission_id   Int
-  auth_permission auth_permission @relation(fields: [permission_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "auth_user_user_permi_permission_id_1fbb5f2c_fk_auth_perm")
-  auth_user       auth_user       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "auth_user_user_permissions_user_id_a95ead1b_fk_auth_user_id")
-
-  @@unique([user_id, permission_id], map: "auth_user_user_permissions_user_id_permission_id_14a6b632_uniq")
-  @@index([permission_id], map: "auth_user_user_permi_permission_id_1fbb5f2c_fk_auth_perm")
-}
-
-model coupons_coupon {
-  id                  String               @id @db.Char(32)
-  code                String               @unique(map: "code") @db.VarChar(50)
-  type                String               @db.VarChar(20)
-  discount_percent    Decimal?             @db.Decimal(5, 2)
-  flat_amount         Decimal?             @db.Decimal(10, 2)
-  max_discount_amount Decimal?             @db.Decimal(10, 2)
-  nth_value           Int
+/// Global/reusable coupon definitions (per-user single-use is tracked in UserCoupon)
+model Coupon {
+  id                  String         @id @db.Char(32)            // UUID hex(32)
+  code                String         @unique(map: "code") @db.VarChar(50)
+  type                String         @db.VarChar(20)             // 'percentage' | 'flat_rate' | 'hybrid'
+  discount_percent    Decimal?       @db.Decimal(5, 2)           // for percentage/hybrid
+  flat_amount         Decimal?       @db.Decimal(10, 2)          // for flat_rate
+  max_discount_amount Decimal?       @db.Decimal(10, 2)          // for hybrid cap
+  nth_value           Int                                            // every-nth order gate
   is_active           Boolean
-  created_at          DateTime             @db.DateTime(6)
-  coupons_usercoupon  coupons_usercoupon[]
+  created_at          DateTime       @db.DateTime(6)
+
+  userCoupons UserCoupon[]
+
+  @@map("coupons_coupon")
 }
 
-model coupons_usercoupon {
-  id             BigInt         @id @default(autoincrement())
-  user_id        Int
-  order_id       Int
-  used_at        DateTime       @db.DateTime(6)
-  coupon_id      String         @db.Char(32)
-  coupons_coupon coupons_coupon @relation(fields: [coupon_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "coupons_usercoupon_coupon_id_755d9a5a_fk")
+/// Per-user redemption lock for a global coupon (each user can use a given code once)
+model UserCoupon {
+  id        BigInt   @id @default(autoincrement())
+  user_id   Int                                         // your chosen customer identifier; keep scalar
+  order_id  String?  @db.Char(32)                       // if you record the order UUID; nullable until used
+  used_at   DateTime @db.DateTime(6)
+
+  coupon_id String
+  coupon    Coupon  @relation(fields: [coupon_id], references: [id], map: "coupons_usercoupon_coupon_id_755d9a5a_fk")
 
   @@unique([user_id, coupon_id], map: "coupons_usercoupon_user_id_coupon_id_4471244d_uniq")
   @@index([coupon_id], map: "coupons_usercoupon_coupon_id_755d9a5a_fk")
+  @@map("coupons_usercoupon")
 }
 
-model customers_customer {
-  id         String   @id @db.Char(32)
-  name       String   @db.VarChar(150)
-  email      String   @unique(map: "email") @db.VarChar(254)
-  password   String   @db.VarChar(255)
-  created_at DateTime @db.DateTime(6)
+/* ========= CART TABLES OWNED BY NODE (PRISMA) =========
+   If you chose “Option B (frontend-only cart & send once on checkout)”
+   you may skip creating these tables. If you DO want server carts for
+   swagger demos/tests, keep them and run `prisma migrate`.
+*/
+
+model Cart {
+  id         String    @id @default(uuid()) @db.Char(36)
+  user_id    String                                   // store Customer.id or any client token
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+
+  items CartItem[]
+
+  @@map("carts_cart")
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model django_admin_log {
-  id                  Int                  @id @default(autoincrement())
-  action_time         DateTime             @db.DateTime(6)
-  object_id           String?              @db.LongText
-  object_repr         String               @db.VarChar(200)
-  action_flag         Int                  @db.UnsignedSmallInt
-  change_message      String               @db.LongText
-  content_type_id     Int?
-  user_id             Int
-  django_content_type django_content_type? @relation(fields: [content_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "django_admin_log_content_type_id_c4bce8eb_fk_django_co")
-  auth_user           auth_user            @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "django_admin_log_user_id_c564eba6_fk_auth_user_id")
+model CartItem {
+  id         String   @id @default(uuid()) @db.Char(36)
+  cart_id    String
+  product_id String
+  quantity   Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  @@index([content_type_id], map: "django_admin_log_content_type_id_c4bce8eb_fk_django_co")
-  @@index([user_id], map: "django_admin_log_user_id_c564eba6_fk_auth_user_id")
-}
+  cart    Cart    @relation(fields: [cart_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id])
 
-model django_content_type {
-  id               Int                @id @default(autoincrement())
-  app_label        String             @db.VarChar(100)
-  model            String             @db.VarChar(100)
-  auth_permission  auth_permission[]
-  django_admin_log django_admin_log[]
-
-  @@unique([app_label, model], map: "django_content_type_app_label_model_76bd3d3b_uniq")
-}
-
-model django_migrations {
-  id      BigInt   @id @default(autoincrement())
-  app     String   @db.VarChar(255)
-  name    String   @db.VarChar(255)
-  applied DateTime @db.DateTime(6)
-}
-
-model django_session {
-  session_key  String   @id @db.VarChar(40)
-  session_data String   @db.LongText
-  expire_date  DateTime @db.DateTime(6)
-
-  @@index([expire_date], map: "django_session_expire_date_a5c62663")
-}
-
-model orders_order {
-  id              String    @id @db.Char(32)
-  subtotal        Decimal   @db.Decimal(10, 2)
-  discount_code   String?   @db.VarChar(50)
-  discount_amount Decimal   @db.Decimal(10, 2)
-  total_amount    Decimal   @db.Decimal(10, 2)
-  created_at      DateTime  @db.DateTime(6)
-  user_id         Int
-  auth_user       auth_user @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "orders_order_user_id_e9b59eb1_fk_auth_user_id")
-
-  @@index([user_id], map: "orders_order_user_id_e9b59eb1_fk_auth_user_id")
-}
-
-model products_product {
-  id                 String   @id @db.Char(32)
-  title              String   @db.VarChar(255)
-  image_url          String?  @db.VarChar(500)
-  description        String?  @db.LongText
-  price              Decimal  @db.Decimal(10, 2)
-  available_quantity Int
-  created_at         DateTime @db.DateTime(6)
+  @@unique([cart_id, product_id])
+  @@map("carts_cartitem")
 }

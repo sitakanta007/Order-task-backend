@@ -16,7 +16,7 @@ export const login = async (req: Request, res: Response) => {
     }
 
     // Find user
-    const user = await prisma.customers_customer.findUnique({
+    const user = await prisma.customer.findUnique({
       where: { email },
     });
 
