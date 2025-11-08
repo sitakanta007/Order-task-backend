@@ -11,7 +11,7 @@ const swaggerSpecs = yaml.parse(file);
 
 swaggerSpecs.servers = [
   {
-    url: process.env.APP_BACKEND || 'http://localhost:4000/api',
+    url: process.env.APP_BACKEND || 'http://localhost:5000/api',
   },
 ];
 

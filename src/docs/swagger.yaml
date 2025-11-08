@@ -16,6 +16,8 @@ tags:
     description: Coupon generation & usage
   - name: Customers
     description: Customer login & authentication
+  - name: Auth
+    description: Authentication related endpoints
 
 paths:
   /products:
@@ -32,7 +34,85 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Product'
-
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: User login
+      description: Login using email and password. Returns JWT token on success.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  example: test@gmail.com
+                password:
+                  type: string
+                  example: "123456"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Login successful
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: 4f3bfc58-ecf5-4ed3-8c2c-51301b27f10a
+                      email:
+                        type: string
+                        example: test@gmail.com
+                      name:
+                        type: string
+                        example: John Doe
+        "400":
+          description: Missing required fields
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Email and password are required
+        "401":
+          description: Invalid email or password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Invalid email or password
+        "500":
+          description: Internal server error
 components:
   schemas:
     Product:
