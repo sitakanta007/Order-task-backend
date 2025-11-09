@@ -2,7 +2,7 @@ import { Router } from "express";
 import {
   getUserCart,
   updateCart,
-  checkoutCart,
+  checkoutCart
 } from "../controllers/cart.controller";
 
 const router = Router();

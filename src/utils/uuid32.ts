@@ -1,5 +1,5 @@
-import crypto from "crypto";
+import { randomUUID } from "crypto";
 
 export function uuid32() {
-  return crypto.randomUUID().replace(/-/g, "");
+  return randomUUID().replace(/-/g, "").toLowerCase();
 }

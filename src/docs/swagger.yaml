@@ -176,23 +176,6 @@ paths:
       responses:
         "200":
           description: Cart updated
-  /cart/checkout:
-    post:
-      tags:
-        - Cart
-      summary: Checkout current cart
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                user_id:
-                  type: string
-      responses:
-        "200":
-          description: Checkout processed
   /coupons/{userId}:
     get:
       tags:
@@ -256,6 +239,135 @@ paths:
                 properties:
                   message:
                     type: string
+  /cart/checkout:
+    post:
+      tags:
+        - Cart
+      summary: Checkout and place order
+      description: >
+        Syncs the user's cart with frontend items, validates coupon rules,
+        recalculates pricing using DB product prices, applies discounts, adds GST,
+        creates an order, order items, locks coupon usage, then deletes the user's cart.
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_id
+                - items
+                - subtotal
+                - discount
+                - tax
+                - total_amount
+              properties:
+                user_id:
+                  type: string
+                  description: User ID (CHAR(32))
+                  example: "c8e2d9a3b4f14a2fb3de0c318f7b1c15"
+                items:
+                  type: array
+                  description: Cart items sent from frontend snapshot
+                  items:
+                    type: object
+                    required: [product_id, quantity]
+                    properties:
+                      product_id:
+                        type: string
+                        example: "7f32a1ce98b247c59e609a431c0eecee"
+                      quantity:
+                        type: integer
+                        example: 2
+                      price:
+                        type: number
+                        description: >
+                          Frontend price (ignored by backend validation; backend fetches price from DB)
+                        example: 499
+                subtotal:
+                  type: number
+                  description: >
+                    Frontend-submitted subtotal. Backend recalculates subtotal using DB prices
+                    and rejects the request if mismatch occurs.
+                  example: 998
+                discount:
+                  type: number
+                  description: >
+                    Frontend discount preview. Backend recomputes discount based on valid coupon rules
+                    and rejects mismatches.
+                  example: 99
+                tax:
+                  type: number
+                  description: >
+                    Tax from frontend. Backend recomputes: GST = 5% of (subtotal - discount).
+                  example: 44.95
+                total_amount:
+                  type: number
+                  description: >
+                    Final payable. Backend recomputes and rejects mismatches.
+                  example: 943.95
+                coupon:
+                  type: string
+                  nullable: true
+                  description: Optional coupon code
+                  example: "XYZ10"
+
+      responses:
+        200:
+          description: Order successfully placed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Order placed successfully"
+                  order_id:
+                    type: string
+                    example: "a91d2f8b9633423aa8a0b49dbbb430b1"
+                  subtotal:
+                    type: number
+                    example: 998
+                  discountAmount:
+                    type: number
+                    example: 99
+                  tax:
+                    type: number
+                    example: 44.95
+                  total_amount:
+                    type: number
+                    example: 943.95
+
+        400:
+          description: Invalid request or failed validation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                examples:
+                  priceMismatch:
+                    summary: Subtotal mismatch
+                    value:
+                      message: "Subtotal mismatch. Please refresh cart."
+                  couponInvalid:
+                    summary: Invalid coupon
+                    value:
+                      message: "Invalid coupon code"
+                  couponUsed:
+                    summary: Coupon already used by same user
+                    value:
+                      message: "Coupon already used by this user"
+                  couponNthBlocked:
+                    summary: nth_value validation failed
+                    value:
+                      message: "Coupon not applicable for this order number"
 components:
   schemas:
     Product:
