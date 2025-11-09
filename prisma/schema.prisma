@@ -37,15 +37,14 @@ model Product {
 
 /// Orders created at checkout (header)
 model Order {
-  id              String   @id @db.Char(32)            // UUID hex(32)
-  user_id         Int                                     // FK to auth_user (managed by Django); keep scalar
+  id              String   @id @db.Char(32)
+  user_id         String   @db.Char(32)     // FIXED
   subtotal        Decimal  @db.Decimal(10, 2)
   discount_code   String?  @db.VarChar(50)
   discount_amount Decimal  @db.Decimal(10, 2)
   total_amount    Decimal  @db.Decimal(10, 2)
   created_at      DateTime @db.DateTime(6)
 
-  @@index([user_id], map: "orders_order_user_id_e9b59eb1_fk_auth_user_id")
   @@map("orders_order")
 }
 
@@ -69,15 +68,14 @@ model Coupon {
 /// Per-user redemption lock for a global coupon (each user can use a given code once)
 model UserCoupon {
   id        BigInt   @id @default(autoincrement())
-  user_id   Int                                         // your chosen customer identifier; keep scalar
-  order_id  String?  @db.Char(32)                       // if you record the order UUID; nullable until used
+  order_id  String?  @db.Char(32)
+  user_id   String   @db.Char(32)
+  coupon_id String
   used_at   DateTime @db.DateTime(6)
 
-  coupon_id String
-  coupon    Coupon  @relation(fields: [coupon_id], references: [id], map: "coupons_usercoupon_coupon_id_755d9a5a_fk")
+  coupon    Coupon @relation(fields: [coupon_id], references: [id])
 
-  @@unique([user_id, coupon_id], map: "coupons_usercoupon_user_id_coupon_id_4471244d_uniq")
-  @@index([coupon_id], map: "coupons_usercoupon_coupon_id_755d9a5a_fk")
+  @@unique([user_id, coupon_id])
   @@map("coupons_usercoupon")
 }
 
