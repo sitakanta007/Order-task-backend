@@ -8,7 +8,9 @@
     },
     "esModuleInterop": true,
     "strict": false,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "module": "commonjs",
+    "resolveJsonModule": true,
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]

@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
 import couponService from "../services/coupon.service";
+import { norm } from "../utils/norm";
 
 export const getAvailableCoupon = async (req: Request, res: Response) => {
   try {
-    const userId = req.params.userId;
+    const userId = norm(req.params.userId);  
 
     const result = await couponService.getAvailableCoupons(userId);
 

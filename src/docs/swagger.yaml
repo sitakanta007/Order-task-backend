@@ -11,9 +11,9 @@ tags:
   - name: Products
     description: Product list & details
   - name: Orders
-    description: Order creation & checkout
+    description: Get orders
   - name: Cart
-    description: Add products to Cart
+    description: Add products to Cart, and checkout
   - name: Coupons
     description: Coupon generation & usage
   - name: Customers
@@ -368,6 +368,70 @@ paths:
                     summary: nth_value validation failed
                     value:
                       message: "Coupon not applicable for this order number"
+  /orders/{userId}:
+    get:
+      summary: Get all orders for a user
+      description: Returns a list of all orders placed by the user, including order items and product details.
+      tags:
+        - Orders
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+          description: User's UUID (32-char)
+      responses:
+        "200":
+          description: List of user orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    order_id:
+                      type: string
+                    created_at:
+                      type: string
+                      format: date-time
+                    subtotal:
+                      type: number
+                    discount_amount:
+                      type: number
+                    tax:
+                      type: number
+                    total_amount:
+                      type: number
+                    coupon_code:
+                      type: string
+                      nullable: true
+                    items:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          product_id:
+                            type: string
+                          quantity:
+                            type: number
+                          price_at_time:
+                            type: number
+                          title:
+                            type: string
+                          image_url:
+                            type: string
+                            nullable: true
+        "400":
+          description: Error fetching orders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
 components:
   schemas:
     Product:
