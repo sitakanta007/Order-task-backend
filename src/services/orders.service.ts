@@ -22,7 +22,7 @@ const ordersService = {
 
     // Format into frontend-friendly structure
     const formatted = orders.map((o) => ({
-      order_id: o.id,
+      id: o.id,
       created_at: o.created_at,
       subtotal: Number(o.subtotal),
       discount_amount: Number(o.discount_amount),
